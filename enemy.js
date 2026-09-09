@@ -1,39 +1,43 @@
-// =====================================
-// ENEMY SYSTEM
-// =====================================
+// ===============================
+// ENEMIES
+// ===============================
 
 let enemies = [];
 
-
-// =====================================
-// ENEMY SETTINGS
-// =====================================
-
 const ENEMY_SPEED = 2.2;
 const ENEMY_HEALTH = 100;
+
 const ENEMY_ATTACK_RANGE = 2.2;
 const ENEMY_DETECT_RANGE = 15;
 
+const ENEMY_DAMAGE = 10;
+const ENEMY_ATTACK_COOLDOWN = 1.2;
 
-// =====================================
+
+// ===============================
 // CREATE ENEMY
-// =====================================
+// ===============================
 
 function createEnemy(x, z){
 
-    const enemy = new THREE.Mesh(
+    const geometry = new THREE.BoxGeometry(
+        1.2,
+        2,
+        1.2
+    );
 
-        new THREE.BoxGeometry(
-            1.2,
-            2,
-            1.2
-        ),
 
+    const material =
         new THREE.MeshStandardMaterial({
             color: 0x660000
-        })
+        });
 
+
+    const enemy = new THREE.Mesh(
+        geometry,
+        material
     );
+
 
     enemy.position.set(
         x,
@@ -41,12 +45,16 @@ function createEnemy(x, z){
         z
     );
 
+
     enemy.castShadow = true;
 
-    // Custom enemy data
+
     enemy.health = ENEMY_HEALTH;
+
     enemy.maxHealth = ENEMY_HEALTH;
+
     enemy.attackCooldown = 0;
+
 
     scene.add(enemy);
 
@@ -55,27 +63,32 @@ function createEnemy(x, z){
 }
 
 
-// =====================================
-// CREATE MULTIPLE ENEMIES
-// =====================================
+// ===============================
+// CREATE ALL ENEMIES
+// ===============================
 
 function createEnemies(){
 
     createEnemy(5, -5);
+
     createEnemy(-5, -5);
+
     createEnemy(7, 5);
+
     createEnemy(-7, 5);
 
 }
 
 
-// =====================================
+// ===============================
 // UPDATE ENEMIES
-// =====================================
+// ===============================
 
 function updateEnemies(delta){
 
     if(!player) return;
+
+    if(playerDead) return;
 
 
     for(let i = enemies.length - 1; i >= 0; i--){
@@ -85,79 +98,80 @@ function updateEnemies(delta){
         if(!enemy) continue;
 
 
+        // Cooldown
+
+        if(enemy.attackCooldown > 0){
+
+            enemy.attackCooldown -= delta;
+
+        }
+
+
         // Distance to player
 
-        const dx =
-            player.position.x -
-            enemy.position.x;
-
-        const dz =
-            player.position.z -
-            enemy.position.z;
-
         const distance =
-            Math.sqrt(
-                dx * dx +
-                dz * dz
+            enemy.position.distanceTo(
+                player.position
             );
 
 
-        // =================================
-        // DETECT PLAYER
-        // =================================
+        // -------------------------------
+        // CHASE
+        // -------------------------------
 
-        if(distance < ENEMY_DETECT_RANGE){
+        if(
+            distance <= ENEMY_DETECT_RANGE &&
+            distance > ENEMY_ATTACK_RANGE
+        ){
 
-            // Face player
-
-            enemy.rotation.y =
-                Math.atan2(dx, dz);
-
-
-            // =================================
-            // MOVE TOWARD PLAYER
-            // =================================
-
-            if(
-                distance >
-                ENEMY_ATTACK_RANGE
-            ){
-
-                enemy.position.x +=
-                    (dx / distance) *
-                    ENEMY_SPEED *
-                    delta;
-
-                enemy.position.z +=
-                    (dz / distance) *
-                    ENEMY_SPEED *
-                    delta;
-
-            }
+            const direction =
+                new THREE.Vector3()
+                    .subVectors(
+                        player.position,
+                        enemy.position
+                    )
+                    .normalize();
 
 
-            // =================================
-            // ATTACK
-            // =================================
+            enemy.position.x +=
+                direction.x *
+                ENEMY_SPEED *
+                delta;
 
-            if(distance <= ENEMY_ATTACK_RANGE){
 
-                enemyAttack(enemy, delta);
-
-            }
+            enemy.position.z +=
+                direction.z *
+                ENEMY_SPEED *
+                delta;
 
         }
 
 
-        // =================================
-        // REMOVE DEAD ENEMY
-        // =================================
+        // -------------------------------
+        // FACE PLAYER
+        // -------------------------------
 
-        if(enemy.health <= 0){
+        if(distance <= ENEMY_DETECT_RANGE){
 
-            scene.remove(enemy);
+            enemy.lookAt(
+                player.position.x,
+                enemy.position.y,
+                player.position.z
+            );
 
-            enemies.splice(i, 1);
+        }
+
+
+        // -------------------------------
+        // ATTACK
+        // -------------------------------
+
+        if(
+            distance <= ENEMY_ATTACK_RANGE &&
+            enemy.attackCooldown <= 0
+        ){
+
+            enemyAttack(enemy);
 
         }
 
@@ -166,31 +180,26 @@ function updateEnemies(delta){
 }
 
 
-// =====================================
+// ===============================
 // ENEMY ATTACK
-// =====================================
+// ===============================
 
-function enemyAttack(enemy, delta){
+function enemyAttack(enemy){
 
-    if(enemy.attackCooldown > 0){
-
-        enemy.attackCooldown -= delta;
-
-        return;
-
-    }
+    enemy.attackCooldown =
+        ENEMY_ATTACK_COOLDOWN;
 
 
-    enemy.attackCooldown = 1.2;
-
-    console.log("Enemy attacked!");
+    damagePlayer(
+        ENEMY_DAMAGE
+    );
 
 }
 
 
-// =====================================
+// ===============================
 // DAMAGE ENEMY
-// =====================================
+// ===============================
 
 function damageEnemy(enemy, damage){
 
@@ -199,25 +208,20 @@ function damageEnemy(enemy, damage){
 
     enemy.health -= damage;
 
-    console.log(
-        "Enemy HP:",
-        enemy.health
+
+    // Flash white
+
+    enemy.material.emissive.setHex(
+        0xffffff
     );
 
 
-    // Flash red
+    setTimeout(function(){
 
-    enemy.material.color.setHex(
-        0xff0000
-    );
+        if(enemy.material){
 
-
-    setTimeout(() => {
-
-        if(enemy && enemy.material){
-
-            enemy.material.color.setHex(
-                0x660000
+            enemy.material.emissive.setHex(
+                0x000000
             );
 
         }
@@ -225,69 +229,25 @@ function damageEnemy(enemy, damage){
     }, 100);
 
 
-    // Death
+    // Knockback
 
-    if(enemy.health <= 0){
-
-        console.log("Enemy defeated!");
-
-    }
-
-}
-
-function damageEnemy(enemy, damage){
-
-    if(!enemy) return;
-
-    enemy.health -= damage;
-
-    const dx =
-        enemy.position.x -
-        player.position.x;
-
-    const dz =
-        enemy.position.z -
-        player.position.z;
-
-    const distance =
-        Math.sqrt(
-            dx * dx +
-            dz * dz
-        );
+    const direction =
+        new THREE.Vector3()
+            .subVectors(
+                enemy.position,
+                player.position
+            )
+            .normalize();
 
 
-    if(distance > 0){
+    enemy.position.x +=
+        direction.x * 0.7;
 
-        enemy.position.x +=
-            (dx / distance) * 0.7;
-
-        enemy.position.z +=
-            (dz / distance) * 0.7;
-
-    }
+    enemy.position.z +=
+        direction.z * 0.7;
 
 
-    // Hit flash
-
-    enemy.material.color.setHex(
-        0xffffff
-    );
-
-
-    setTimeout(function(){
-
-        if(enemy && enemy.material){
-
-            enemy.material.color.setHex(
-                0x660000
-            );
-
-        }
-
-    }, 80);
-
-
-    // Death
+    // Dead
 
     if(enemy.health <= 0){
 
@@ -295,6 +255,7 @@ function damageEnemy(enemy, damage){
 
         const index =
             enemies.indexOf(enemy);
+
 
         if(index !== -1){
 
@@ -306,5 +267,8 @@ function damageEnemy(enemy, damage){
         }
 
     }
+
+
+    updateHUD();
 
 }
