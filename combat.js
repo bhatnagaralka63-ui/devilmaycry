@@ -1,24 +1,35 @@
 // =====================================
-// COMBAT SYSTEM
+// CRIMSON STYLE - COMBAT SYSTEM
 // =====================================
 
+// -------------------------------------
+// COMBAT STATE
+// -------------------------------------
+
 let attacking = false;
+
 let attackTimer = 0;
 let attackCooldown = 0;
 
 let comboStep = 0;
 let comboTimer = 0;
 
-const ATTACK_DURATION = 0.25;
-const ATTACK_COOLDOWN = 0.35;
-const COMBO_RESET_TIME = 0.8;
-
-
-// =====================================
-// SWORD
-// =====================================
+let hitEnemies = [];
 
 let sword;
+
+
+// -------------------------------------
+// COMBAT SETTINGS
+// -------------------------------------
+
+const ATTACK_DURATION = 0.30;
+const ATTACK_COOLDOWN = 0.35;
+
+const COMBO_RESET_TIME = 0.80;
+
+const ATTACK_DAMAGE = 35;
+const HIT_RANGE = 3.2;
 
 
 // =====================================
@@ -26,6 +37,8 @@ let sword;
 // =====================================
 
 function createSword(){
+
+    if(!player) return;
 
     sword = new THREE.Mesh(
 
@@ -36,20 +49,33 @@ function createSword(){
         ),
 
         new THREE.MeshStandardMaterial({
+
             color: 0xdddddd,
-            metalness: 0.8,
+
+            metalness: 0.85,
+
             roughness: 0.2
+
         })
 
     );
 
+
+    sword.castShadow = true;
+
+
     sword.position.set(
+
         0.7,
         0.2,
         -1.2
+
     );
 
-    sword.rotation.x = Math.PI / 2;
+
+    sword.rotation.x =
+        Math.PI / 2;
+
 
     player.add(sword);
 
@@ -57,39 +83,51 @@ function createSword(){
 
 
 // =====================================
-// INPUT
+// MOUSE ATTACK
 // =====================================
 
-window.addEventListener("keydown", (event) => {
+window.addEventListener(
+    "mousedown",
+    function(event){
 
-    if(event.code === "Mouse0"){
-        attack();
-    }
+        // Left mouse button
 
-});
+        if(event.button === 0){
 
+            attack();
 
-// Mouse attack
-window.addEventListener("mousedown", (event) => {
-
-    if(event.button === 0){
-
-        attack();
+        }
 
     }
-
-});
+);
 
 
 // =====================================
-// ATTACK
+// ATTACK FUNCTION
 // =====================================
 
 function attack(){
 
-    if(attacking) return;
+    // Don't attack while already
+    // performing an attack
 
-    if(attackCooldown > 0) return;
+    if(attacking){
+
+        return;
+
+    }
+
+
+    // Cooldown
+
+    if(attackCooldown > 0){
+
+        return;
+
+    }
+
+
+    // Start attack
 
     attacking = true;
 
@@ -98,9 +136,15 @@ function attack(){
     attackCooldown = ATTACK_COOLDOWN;
 
 
+    // Reset hit list
+
+    hitEnemies = [];
+
+
     // Increase combo
 
     comboStep++;
+
 
     if(comboStep > 3){
 
@@ -108,11 +152,13 @@ function attack(){
 
     }
 
-    comboTimer = COMBO_RESET_TIME;
+
+    comboTimer =
+        COMBO_RESET_TIME;
 
 
     console.log(
-        "ATTACK COMBO:",
+        "COMBO:",
         comboStep
     );
 
@@ -128,7 +174,9 @@ function updateCombat(delta){
     if(!player) return;
 
 
-    // Cooldown
+    // ---------------------------------
+    // ATTACK COOLDOWN
+    // ---------------------------------
 
     if(attackCooldown > 0){
 
@@ -137,13 +185,16 @@ function updateCombat(delta){
     }
 
 
-    // Combo timer
+    // ---------------------------------
+    // COMBO TIMER
+    // ---------------------------------
 
     if(comboTimer > 0){
 
         comboTimer -= delta;
 
     }
+
     else{
 
         comboStep = 0;
@@ -151,44 +202,88 @@ function updateCombat(delta){
     }
 
 
-    // Attack animation
+    // ---------------------------------
+    // ATTACK ANIMATION
+    // ---------------------------------
 
     if(attacking){
 
         attackTimer -= delta;
 
 
-        // Sword swing
+        if(!sword) return;
+
+
+        // =============================
+        // COMBO 1
+        // =============================
 
         if(comboStep === 1){
 
+            const progress =
+                1 -
+                attackTimer /
+                ATTACK_DURATION;
+
+
             sword.rotation.y =
-                Math.sin(
-                    attackTimer * 18
-                ) * 1.5;
+                -1.5 +
+                progress * 3;
+
 
         }
+
+
+        // =============================
+        // COMBO 2
+        // =============================
 
         else if(comboStep === 2){
 
+            const progress =
+                1 -
+                attackTimer /
+                ATTACK_DURATION;
+
+
             sword.rotation.y =
-                -Math.sin(
-                    attackTimer * 18
-                ) * 1.8;
+                1.5 -
+                progress * 3;
+
 
         }
+
+
+        // =============================
+        // COMBO 3
+        // =============================
 
         else if(comboStep === 3){
 
+            const progress =
+                1 -
+                attackTimer /
+                ATTACK_DURATION;
+
+
             sword.rotation.y =
-                Math.sin(
-                    attackTimer * 22
-                ) * 2.2;
+                -2 +
+                progress * 4;
+
 
         }
 
 
-        // End attack
+        // ---------------------------------
+        // CHECK FOR HITS
+        // ---------------------------------
+
+        checkSwordHit();
+
+
+        // ---------------------------------
+        // END ATTACK
+        // ---------------------------------
 
         if(attackTimer <= 0){
 
@@ -199,5 +294,167 @@ function updateCombat(delta){
         }
 
     }
+
+}
+
+
+// =====================================
+// SWORD HIT DETECTION
+// =====================================
+
+function checkSwordHit(){
+
+    if(!enemies) return;
+
+
+    for(
+        let i = 0;
+        i < enemies.length;
+        i++
+    ){
+
+        const enemy = enemies[i];
+
+
+        if(!enemy) continue;
+
+
+        // ---------------------------------
+        // Don't hit same enemy twice
+        // during one swing
+        // ---------------------------------
+
+        if(
+            hitEnemies.includes(enemy)
+        ){
+
+            continue;
+
+        }
+
+
+        // ---------------------------------
+        // Distance
+        // ---------------------------------
+
+        const distance =
+            player.position.distanceTo(
+                enemy.position
+            );
+
+
+        // ---------------------------------
+        // Enemy is inside sword range
+        // ---------------------------------
+
+        if(distance <= HIT_RANGE){
+
+            damageEnemy(
+                enemy,
+                ATTACK_DAMAGE
+            );
+
+
+            hitEnemies.push(enemy);
+
+
+            // Hit effect
+
+            createHitEffect(enemy);
+
+
+            console.log(
+                "HIT!",
+                "Damage:",
+                ATTACK_DAMAGE
+            );
+
+        }
+
+    }
+
+}
+
+
+// =====================================
+// HIT EFFECT
+// =====================================
+
+function createHitEffect(enemy){
+
+    if(!enemy) return;
+
+
+    const geometry =
+        new THREE.SphereGeometry(
+            0.12,
+            8,
+            8
+        );
+
+
+    const material =
+        new THREE.MeshBasicMaterial({
+
+            color: 0xffff00
+
+        });
+
+
+    const effect =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+
+    effect.position.copy(
+        enemy.position
+    );
+
+
+    effect.position.y += 1;
+
+
+    scene.add(effect);
+
+
+    // Remove effect shortly after
+
+    setTimeout(function(){
+
+        scene.remove(effect);
+
+        geometry.dispose();
+
+        material.dispose();
+
+    }, 120);
+
+}
+
+
+// =====================================
+// RESET COMBO
+// =====================================
+
+function resetCombo(){
+
+    comboStep = 0;
+
+    comboTimer = 0;
+
+    hitEnemies = [];
+
+}
+
+
+// =====================================
+// GET COMBO
+// =====================================
+
+function getCombo(){
+
+    return comboStep;
 
 }
