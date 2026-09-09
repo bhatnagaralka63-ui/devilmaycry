@@ -1,13 +1,6 @@
 // ===============================
-// CRIMSON STYLE HUD
+// UI SYSTEM
 // ===============================
-
-let healthBar;
-let healthText;
-let comboText;
-let styleText;
-let enemyText;
-let gameOverScreen;
 
 
 // ===============================
@@ -16,48 +9,49 @@ let gameOverScreen;
 
 function createHUD(){
 
-    // -------------------------------
-    // HUD CONTAINER
-    // -------------------------------
+    const hud =
+        document.createElement(
+            "div"
+        );
 
-    const hud = document.createElement("div");
-
-    hud.id = "gameHUD";
+    hud.id =
+        "gameHUD";
 
 
     hud.innerHTML = `
 
         <div class="hud-top">
 
-            <div class="health-container">
+            <div class="player-health">
 
-                <div class="health-label">
+                <div class="hud-title">
                     VITALITY
                 </div>
 
-                <div class="health-bar-bg">
+                <div class="health-background">
 
                     <div
                         id="healthBar"
-                        class="health-bar">
-                    </div>
+                        class="health-fill"
+                    ></div>
 
                 </div>
 
                 <div
                     id="healthText"
-                    class="health-text">
+                    class="health-text"
+                >
                     100 / 100
                 </div>
 
             </div>
 
 
-            <div class="enemy-counter">
-
-                DEMONS:
-                <span id="enemyText">4</span>
-
+            <div
+                id="enemyCounter"
+                class="enemy-counter"
+            >
+                ENEMIES: 0
             </div>
 
         </div>
@@ -67,14 +61,20 @@ function createHUD(){
 
             <div
                 id="comboText"
-                class="combo-text">
-                COMBO 0
+                class="combo-text"
+            >
+                0 HITS
             </div>
 
             <div
-                id="styleText"
-                class="style-text">
+                id="styleRank"
+                class="style-rank"
+            >
                 D
+            </div>
+
+            <div class="style-label">
+                STYLE
             </div>
 
         </div>
@@ -82,40 +82,14 @@ function createHUD(){
     `;
 
 
-    document.body.appendChild(hud);
+    document.body.appendChild(
+        hud
+    );
 
 
-    healthBar =
-        document.getElementById(
-            "healthBar"
-        );
-
-
-    healthText =
-        document.getElementById(
-            "healthText"
-        );
-
-
-    comboText =
-        document.getElementById(
-            "comboText"
-        );
-
-
-    styleText =
-        document.getElementById(
-            "styleText"
-        );
-
-
-    enemyText =
-        document.getElementById(
-            "enemyText"
-        );
-
-
+    // Game over
     createGameOver();
+
 
     updateHUD();
 
@@ -123,33 +97,33 @@ function createHUD(){
 
 
 // ===============================
-// GAME OVER SCREEN
+// GAME OVER
 // ===============================
 
 function createGameOver(){
 
-    gameOverScreen =
-        document.createElement("div");
+    const overlay =
+        document.createElement(
+            "div"
+        );
+
+    overlay.id =
+        "gameOver";
 
 
-    gameOverScreen.id =
-        "gameOverScreen";
-
-
-    gameOverScreen.innerHTML = `
+    overlay.innerHTML = `
 
         <div class="game-over-box">
 
-            <div class="game-over-title">
-                YOU DIED
-            </div>
+            <h1>YOU DIED</h1>
 
-            <div class="game-over-subtitle">
-                THE HUNT ENDS HERE
-            </div>
+            <p>
+                Your style ends here.
+            </p>
 
             <button
-                id="restartButton">
+                onclick="restartGame()"
+            >
                 RESTART
             </button>
 
@@ -159,16 +133,8 @@ function createGameOver(){
 
 
     document.body.appendChild(
-        gameOverScreen
+        overlay
     );
-
-
-    document
-        .getElementById("restartButton")
-        .addEventListener(
-            "click",
-            restartGame
-        );
 
 }
 
@@ -179,83 +145,304 @@ function createGameOver(){
 
 function updateHUD(){
 
-    if(!healthBar) return;
+    if(!player) return;
 
 
-    // -------------------------------
+    // =========================
     // HEALTH
-    // -------------------------------
+    // =========================
 
     const healthPercent =
-        (playerHealth / playerMaxHealth) *
-        100;
+        Math.max(
+            0,
+            playerHealth /
+            playerMaxHealth *
+            100
+        );
 
 
-    healthBar.style.width =
-        healthPercent + "%";
+    const healthBar =
+        document.getElementById(
+            "healthBar"
+        );
 
 
-    healthText.textContent =
-        Math.ceil(playerHealth) +
-        " / " +
-        playerMaxHealth;
+    const healthText =
+        document.getElementById(
+            "healthText"
+        );
 
 
-    // -------------------------------
-    // COMBO
-    // -------------------------------
+    if(healthBar){
 
-    let combo = 0;
-
-    if(typeof getCombo === "function"){
-
-        combo = getCombo();
+        healthBar.style.width =
+            healthPercent + "%";
 
     }
 
 
-    comboText.textContent =
-        "COMBO " + combo;
+    if(healthText){
+
+        healthText.textContent =
+            Math.ceil(playerHealth) +
+            " / " +
+            playerMaxHealth;
+
+    }
 
 
-    // -------------------------------
-    // ENEMIES
-    // -------------------------------
+    // =========================
+    // ENEMY COUNTER
+    // =========================
 
-    enemyText.textContent =
-        enemies.length;
+    const enemyCounter =
+        document.getElementById(
+            "enemyCounter"
+        );
 
 
-    // -------------------------------
+    if(enemyCounter){
+
+        enemyCounter.textContent =
+            "ENEMIES: " +
+            enemies.length;
+
+    }
+
+
+    // =========================
+    // COMBO
+    // =========================
+
+    const combo =
+        getCombo();
+
+
+    const comboText =
+        document.getElementById(
+            "comboText"
+        );
+
+
+    if(comboText){
+
+        comboText.textContent =
+            combo +
+            " HITS";
+
+    }
+
+
+    // =========================
     // STYLE RANK
-    // -------------------------------
+    // =========================
 
     let rank = "D";
 
 
-    if(combo >= 3){
-        rank = "C";
-    }
-
-    if(combo >= 6){
-        rank = "B";
-    }
-
-    if(combo >= 10){
-        rank = "A";
-    }
-
-    if(combo >= 15){
-        rank = "S";
-    }
-
     if(combo >= 25){
+
         rank = "SS";
+
+    }
+    else if(combo >= 15){
+
+        rank = "S";
+
+    }
+    else if(combo >= 10){
+
+        rank = "A";
+
+    }
+    else if(combo >= 6){
+
+        rank = "B";
+
+    }
+    else if(combo >= 3){
+
+        rank = "C";
+
     }
 
 
-    styleText.textContent =
-        rank;
+    const styleRank =
+        document.getElementById(
+            "styleRank"
+        );
+
+
+    if(styleRank){
+
+        styleRank.textContent =
+            rank;
+
+    }
+
+
+    // =========================
+    // ENEMY HP BARS
+    // =========================
+
+    updateEnemyHealthBars();
+
+}
+
+
+// ===============================
+// CREATE ENEMY HP BAR
+// ===============================
+
+function createEnemyHealthBar(enemy){
+
+    const container =
+        document.createElement(
+            "div"
+        );
+
+    container.className =
+        "enemy-health-container";
+
+
+    container.innerHTML = `
+
+        <div class="enemy-health-bg">
+
+            <div
+                class="enemy-health-fill"
+            ></div>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        container
+    );
+
+
+    enemy.healthBar =
+        container;
+
+}
+
+
+// ===============================
+// UPDATE ENEMY HP BARS
+// ===============================
+
+function updateEnemyHealthBars(){
+
+    if(!camera) return;
+
+
+    for(
+        let i = 0;
+        i < enemies.length;
+        i++
+    ){
+
+        const enemy =
+            enemies[i];
+
+
+        if(
+            !enemy ||
+            !enemy.healthBar
+        ){
+
+            continue;
+
+        }
+
+
+        const position =
+            enemy.position.clone();
+
+
+        position.y += 1.7;
+
+
+        position.project(
+            camera
+        );
+
+
+        const x =
+            (
+                position.x *
+                0.5 +
+                0.5
+            ) *
+            window.innerWidth;
+
+
+        const y =
+            (
+                -position.y *
+                0.5 +
+                0.5
+            ) *
+            window.innerHeight;
+
+
+        enemy.healthBar.style.left =
+            x + "px";
+
+
+        enemy.healthBar.style.top =
+            y + "px";
+
+
+        const healthFill =
+            enemy.healthBar.querySelector(
+                ".enemy-health-fill"
+            );
+
+
+        const percent =
+            Math.max(
+                0,
+                enemy.health /
+                enemy.maxHealth *
+                100
+            );
+
+
+        healthFill.style.width =
+            percent + "%";
+
+
+        // Hide if behind camera
+        enemy.healthBar.style.display =
+            position.z > 1
+                ? "none"
+                : "block";
+
+    }
+
+}
+
+
+// ===============================
+// REMOVE ENEMY HP BAR
+// ===============================
+
+function removeEnemyHealthBar(enemy){
+
+    if(
+        enemy &&
+        enemy.healthBar
+    ){
+
+        enemy.healthBar.remove();
+
+        enemy.healthBar =
+            null;
+
+    }
 
 }
 
@@ -266,12 +453,19 @@ function updateHUD(){
 
 function showGameOver(){
 
-    if(!gameOverScreen) return;
+    const overlay =
+        document.getElementById(
+            "gameOver"
+        );
 
 
-    gameOverScreen.classList.add(
-        "visible"
-    );
+    if(overlay){
+
+        overlay.classList.add(
+            "active"
+        );
+
+    }
 
 }
 
