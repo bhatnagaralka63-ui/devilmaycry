@@ -234,3 +234,77 @@ function damageEnemy(enemy, damage){
     }
 
 }
+
+function damageEnemy(enemy, damage){
+
+    if(!enemy) return;
+
+    enemy.health -= damage;
+
+    const dx =
+        enemy.position.x -
+        player.position.x;
+
+    const dz =
+        enemy.position.z -
+        player.position.z;
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dz * dz
+        );
+
+
+    if(distance > 0){
+
+        enemy.position.x +=
+            (dx / distance) * 0.7;
+
+        enemy.position.z +=
+            (dz / distance) * 0.7;
+
+    }
+
+
+    // Hit flash
+
+    enemy.material.color.setHex(
+        0xffffff
+    );
+
+
+    setTimeout(function(){
+
+        if(enemy && enemy.material){
+
+            enemy.material.color.setHex(
+                0x660000
+            );
+
+        }
+
+    }, 80);
+
+
+    // Death
+
+    if(enemy.health <= 0){
+
+        scene.remove(enemy);
+
+        const index =
+            enemies.indexOf(enemy);
+
+        if(index !== -1){
+
+            enemies.splice(
+                index,
+                1
+            );
+
+        }
+
+    }
+
+}
