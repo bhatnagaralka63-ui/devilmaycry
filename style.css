@@ -801,3 +801,113 @@ canvas{
     background: #ff4444;
 
 }
+
+/* ===============================
+   DEVIL TRIGGER HUD
+=============================== */
+
+.dt-title {
+    margin-top: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: 11px;
+    letter-spacing: 2px;
+
+    color: #ff4444;
+
+    font-weight: bold;
+}
+
+
+#dtPercent {
+    font-size: 11px;
+    color: #ffffff;
+}
+
+
+/* DT BACKGROUND */
+
+.dt-background {
+
+    width: 100%;
+    height: 10px;
+
+    margin-top: 5px;
+
+    background: rgba(0, 0, 0, 0.8);
+
+    border: 1px solid
+        rgba(255, 60, 60, 0.5);
+
+    overflow: hidden;
+
+}
+
+
+/* DT FILL */
+
+.dt-fill {
+
+    width: 0%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #550000,
+            #ff0000,
+            #ff5555
+        );
+
+    box-shadow:
+        0 0 10px #ff0000;
+
+    transition:
+        width 0.15s ease;
+
+}
+
+
+/* DT STATUS */
+
+.dt-status {
+
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    letter-spacing: 2px;
+
+    color: #777;
+
+}
+
+
+.dt-status.active {
+
+    color: #ff2222;
+
+    text-shadow:
+        0 0 8px #ff0000;
+
+    animation:
+        dtPulse 0.8s infinite
+        alternate;
+
+}
+
+
+@keyframes dtPulse {
+
+    from {
+        opacity: 0.6;
+    }
+
+    to {
+        opacity: 1;
+    }
+
+}
