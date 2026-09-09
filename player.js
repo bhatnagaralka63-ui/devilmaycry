@@ -34,7 +34,20 @@ let playerInvulnerabilityTimer = 0;
 
 let playerDead = false;
 
+// ===============================
+// DEVIL TRIGGER
+// ===============================
 
+let devilTrigger = 0;
+let devilTriggerMax = 100;
+
+let devilTriggerActive = false;
+
+const DEVIL_TRIGGER_DURATION = 8;
+let devilTriggerTimer = 0;
+
+const DEVIL_TRIGGER_SPEED_MULTIPLIER = 1.5;
+const DEVIL_TRIGGER_DAMAGE_MULTIPLIER = 1.7;
 // ===============================
 // MOVEMENT
 // ===============================
@@ -275,26 +288,34 @@ function updatePlayer(delta){
     }
 
 
-    // -------------------------------
-    // SPEED
-    // -------------------------------
+   // -------------------------------
+// SPEED
+// -------------------------------
 
-    let targetSpeed = WALK_SPEED;
-
-    if(keys["ShiftLeft"] || keys["ShiftRight"]){
-
-        targetSpeed = SPRINT_SPEED;
-
-    }
+let targetSpeed = WALK_SPEED;
 
 
-    const targetVelocityX =
-        inputX * targetSpeed;
+// SPRINT
+if(keys["ShiftLeft"] || keys["ShiftRight"]){
 
-    const targetVelocityZ =
-        inputZ * targetSpeed;
+    targetSpeed = SPRINT_SPEED;
+
+}
 
 
+// DEVIL TRIGGER SPEED BOOST
+if(devilTriggerActive){
+
+    targetSpeed *= DEVIL_TRIGGER_SPEED_MULTIPLIER;
+
+}
+
+
+const targetVelocityX =
+    inputX * targetSpeed;
+
+const targetVelocityZ =
+    inputZ * targetSpeed;
     // -------------------------------
     // ACCELERATION
     // -------------------------------
@@ -699,5 +720,155 @@ function moveTowards(current, target, maxDelta){
     return current +
         Math.sign(target - current) *
         maxDelta;
+
+}
+
+// ===============================
+// DEVIL TRIGGER ACTIVATION
+// ===============================
+
+window.addEventListener("keydown", function(event){
+
+    if(event.key.toLowerCase() === "e"){
+
+        activateDevilTrigger();
+
+    }
+
+});
+
+
+// ===============================
+// ACTIVATE DEVIL TRIGGER
+// ===============================
+
+function activateDevilTrigger(){
+
+    if(playerDead) return;
+
+    if(devilTriggerActive) return;
+
+    if(devilTrigger < devilTriggerMax) return;
+
+
+    devilTriggerActive = true;
+
+    devilTriggerTimer =
+        DEVIL_TRIGGER_DURATION;
+
+    devilTrigger = 0;
+
+
+    // Visual power-up
+    if(player && player.material){
+
+        player.material.emissive.setHex(
+            0xff0000
+        );
+
+        player.material.emissiveIntensity = 1;
+
+    }
+
+
+    updateHUD();
+
+}
+
+
+// ===============================
+// UPDATE DEVIL TRIGGER
+// ===============================
+
+function updateDevilTrigger(delta){
+
+    if(!devilTriggerActive){
+
+        return;
+
+    }
+
+
+    devilTriggerTimer -= delta;
+
+
+    // Health regeneration
+    if(playerHealth < playerMaxHealth){
+
+        playerHealth +=
+            8 * delta;
+
+        if(playerHealth > playerMaxHealth){
+
+            playerHealth =
+                playerMaxHealth;
+
+        }
+
+    }
+
+
+    // End Devil Trigger
+    if(devilTriggerTimer <= 0){
+
+        deactivateDevilTrigger();
+
+    }
+
+}
+
+
+// ===============================
+// DEACTIVATE DEVIL TRIGGER
+// ===============================
+
+function deactivateDevilTrigger(){
+
+    devilTriggerActive = false;
+
+    devilTriggerTimer = 0;
+
+
+    if(player && player.material){
+
+        player.material.emissive.setHex(
+            0x000000
+        );
+
+        player.material.emissiveIntensity = 0;
+
+    }
+
+
+    updateHUD();
+
+}
+
+
+// ===============================
+// ADD DEVIL TRIGGER ENERGY
+// ===============================
+
+function addDevilTrigger(amount){
+
+    if(devilTriggerActive){
+
+        return;
+
+    }
+
+
+    devilTrigger += amount;
+
+
+    if(devilTrigger > devilTriggerMax){
+
+        devilTrigger =
+            devilTriggerMax;
+
+    }
+
+
+    updateHUD();
 
 }
