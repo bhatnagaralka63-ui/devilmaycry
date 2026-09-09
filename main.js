@@ -46,6 +46,7 @@ function animate(){
 
     updatePlayer(delta);
     updateCombat(delta);
+    updateEnemies(delta);
 
     renderer.render(scene,camera);
 
