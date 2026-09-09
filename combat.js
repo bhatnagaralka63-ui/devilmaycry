@@ -22,8 +22,20 @@ const ATTACK_DURATION = 0.30;
 const ATTACK_COOLDOWN = 0.35;
 const COMBO_RESET_TIME = 0.80;
 
-const ATTACK_DAMAGE = 35;
 const HIT_RANGE = 3.2;
+
+
+// ===============================
+// COMBO DAMAGE
+// ===============================
+
+const COMBO_DAMAGE = {
+
+    1: 25,
+    2: 35,
+    3: 55
+
+};
 
 
 // ===============================
@@ -41,10 +53,15 @@ function createSword(){
 
     const material =
         new THREE.MeshStandardMaterial({
+
             color: 0xdddddd,
+
             metalness: 0.8,
+
             roughness: 0.2
+
         });
+
 
     sword =
         new THREE.Mesh(
@@ -52,16 +69,20 @@ function createSword(){
             material
         );
 
+
     sword.position.set(
         0.7,
         0.2,
         -1.2
     );
 
+
     sword.rotation.x =
         Math.PI / 2;
 
+
     sword.castShadow = true;
+
 
     player.add(
         sword
@@ -112,8 +133,12 @@ function attack(){
     hitEnemies = [];
 
 
-    // Combo
+    // =========================
+    // COMBO
+    // =========================
+
     comboStep++;
+
 
     if(comboStep > 3){
 
@@ -134,6 +159,10 @@ function attack(){
 
 function updateCombat(delta){
 
+    // =========================
+    // ATTACK COOLDOWN
+    // =========================
+
     if(attackCooldown > 0){
 
         attackCooldown -= delta;
@@ -141,9 +170,14 @@ function updateCombat(delta){
     }
 
 
+    // =========================
+    // COMBO TIMER
+    // =========================
+
     if(comboTimer > 0){
 
         comboTimer -= delta;
+
 
         if(comboTimer <= 0){
 
@@ -156,6 +190,10 @@ function updateCombat(delta){
 
     if(!attacking) return;
 
+
+    // =========================
+    // ATTACK TIMER
+    // =========================
 
     attackTimer -= delta;
 
@@ -208,6 +246,10 @@ function updateCombat(delta){
     }
 
 
+    // =========================
+    // CHECK HITS
+    // =========================
+
     checkSwordHit();
 
 
@@ -244,10 +286,12 @@ function checkSwordHit(){
         const enemy =
             enemies[i];
 
+
         if(!enemy) continue;
 
 
-        // Already hit during this attack
+        // Already hit during
+        // this attack
         if(
             hitEnemies.includes(
                 enemy
@@ -258,6 +302,10 @@ function checkSwordHit(){
 
         }
 
+
+        // =========================
+        // DISTANCE CHECK
+        // =========================
 
         const distance =
             enemy.position.distanceTo(
@@ -274,10 +322,41 @@ function checkSwordHit(){
             );
 
 
+            // =========================
+            // DAMAGE
+            // =========================
+
+            let damage =
+                COMBO_DAMAGE[comboStep];
+
+
+            // =========================
+            // DEVIL TRIGGER BOOST
+            // =========================
+
+            if(devilTriggerActive){
+
+                damage *=
+                    DEVIL_TRIGGER_DAMAGE_MULTIPLIER;
+
+            }
+
+
+            // =========================
+            // DAMAGE ENEMY
+            // =========================
+
             damageEnemy(
                 enemy,
-                ATTACK_DAMAGE
+                damage
             );
+
+
+            // =========================
+            // DEVIL TRIGGER GAUGE
+            // =========================
+
+            addDevilTrigger(8);
 
         }
 
@@ -299,10 +378,14 @@ function createHitEffect(enemy){
             8
         );
 
+
     const material =
         new THREE.MeshBasicMaterial({
+
             color: 0xffff00
+
         });
+
 
     const effect =
         new THREE.Mesh(
@@ -314,6 +397,7 @@ function createHitEffect(enemy){
     effect.position.copy(
         enemy.position
     );
+
 
     effect.position.y += 1;
 
