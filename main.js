@@ -35,6 +35,7 @@ function init(){
     createSword();
     createEnemies();
     animate();
+    
 
 }
 
