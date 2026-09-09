@@ -29,9 +29,10 @@ function init(){
     document.body.appendChild(renderer.domElement);
 
     clock = new THREE.Clock();
-
+    
     createWorld();
     createPlayer();
+    createSword();
 
     animate();
 
