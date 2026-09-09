@@ -1,21 +1,13 @@
 // ===============================
-// UI SYSTEM
-// ===============================
-
-
-// ===============================
-// CREATE HUD
+// GAME HUD
 // ===============================
 
 function createHUD(){
 
     const hud =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-    hud.id =
-        "gameHUD";
+    hud.id = "gameHUD";
 
 
     hud.innerHTML = `
@@ -28,53 +20,101 @@ function createHUD(){
                     VITALITY
                 </div>
 
+
+                <!-- HEALTH BAR -->
+
                 <div class="health-background">
 
                     <div
                         id="healthBar"
-                        class="health-fill"
-                    ></div>
+                        class="health-fill">
+                    </div>
 
                 </div>
 
+
                 <div
                     id="healthText"
-                    class="health-text"
-                >
+                    class="health-text">
+
                     100 / 100
+
+                </div>
+
+
+                <!-- DEVIL TRIGGER -->
+
+                <div class="dt-title">
+
+                    DEVIL TRIGGER
+
+                    <span id="dtPercent">
+                        0%
+                    </span>
+
+                </div>
+
+
+                <div class="dt-background">
+
+                    <div
+                        id="dtBar"
+                        class="dt-fill">
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="dtStatus"
+                    class="dt-status">
+
+                    READY AT 100%
+
                 </div>
 
             </div>
 
 
+            <!-- ENEMY COUNTER -->
+
             <div
                 id="enemyCounter"
-                class="enemy-counter"
-            >
+                class="enemy-counter">
+
                 ENEMIES: 0
+
             </div>
 
         </div>
 
 
+        <!-- COMBAT INFO -->
+
         <div class="combat-info">
 
             <div
                 id="comboText"
-                class="combo-text"
-            >
+                class="combo-text">
+
                 0 HITS
+
             </div>
+
 
             <div
                 id="styleRank"
-                class="style-rank"
-            >
+                class="style-rank">
+
                 D
+
             </div>
 
+
             <div class="style-label">
+
                 STYLE
+
             </div>
 
         </div>
@@ -87,9 +127,7 @@ function createHUD(){
     );
 
 
-    // Game over
     createGameOver();
-
 
     updateHUD();
 
@@ -103,28 +141,28 @@ function createHUD(){
 function createGameOver(){
 
     const overlay =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-    overlay.id =
-        "gameOver";
+    overlay.id = "gameOver";
 
 
     overlay.innerHTML = `
 
         <div class="game-over-box">
 
-            <h1>YOU DIED</h1>
+            <h1>
+                YOU DIED
+            </h1>
 
             <p>
                 Your style ends here.
             </p>
 
             <button
-                onclick="restartGame()"
-            >
+                onclick="restartGame()">
+
                 RESTART
+
             </button>
 
         </div>
@@ -192,6 +230,107 @@ function updateHUD(){
 
 
     // =========================
+    // DEVIL TRIGGER
+    // =========================
+
+    const dtBar =
+        document.getElementById(
+            "dtBar"
+        );
+
+
+    const dtPercent =
+        document.getElementById(
+            "dtPercent"
+        );
+
+
+    const dtStatus =
+        document.getElementById(
+            "dtStatus"
+        );
+
+
+    if(
+        dtBar &&
+        typeof devilTrigger !== "undefined" &&
+        typeof devilTriggerMax !== "undefined"
+    ){
+
+        const devilPercent =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    devilTrigger /
+                    devilTriggerMax *
+                    100
+                )
+            );
+
+
+        dtBar.style.width =
+            devilPercent + "%";
+
+
+        if(dtPercent){
+
+            dtPercent.textContent =
+                Math.floor(
+                    devilPercent
+                ) + "%";
+
+        }
+
+
+        if(dtStatus){
+
+            if(
+                typeof devilTriggerActive !==
+                "undefined" &&
+                devilTriggerActive
+            ){
+
+                dtStatus.textContent =
+                    "DEVIL TRIGGER ACTIVE";
+
+                dtStatus.classList.add(
+                    "active"
+                );
+
+            }
+
+            else if(
+                devilTrigger >=
+                devilTriggerMax
+            ){
+
+                dtStatus.textContent =
+                    "PRESS E TO ACTIVATE";
+
+                dtStatus.classList.remove(
+                    "active"
+                );
+
+            }
+
+            else{
+
+                dtStatus.textContent =
+                    "BUILDING...";
+
+                dtStatus.classList.remove(
+                    "active"
+                );
+
+            }
+
+        }
+
+    }
+
+
+    // =========================
     // ENEMY COUNTER
     // =========================
 
@@ -245,21 +384,25 @@ function updateHUD(){
         rank = "SS";
 
     }
+
     else if(combo >= 15){
 
         rank = "S";
 
     }
+
     else if(combo >= 10){
 
         rank = "A";
 
     }
+
     else if(combo >= 6){
 
         rank = "B";
 
     }
+
     else if(combo >= 3){
 
         rank = "C";
@@ -282,7 +425,7 @@ function updateHUD(){
 
 
     // =========================
-    // ENEMY HP BARS
+    // ENEMY HEALTH BARS
     // =========================
 
     updateEnemyHealthBars();
@@ -291,15 +434,13 @@ function updateHUD(){
 
 
 // ===============================
-// CREATE ENEMY HP BAR
+// ENEMY HEALTH BAR
 // ===============================
 
 function createEnemyHealthBar(enemy){
 
     const container =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
     container.className =
         "enemy-health-container";
@@ -310,8 +451,8 @@ function createEnemyHealthBar(enemy){
         <div class="enemy-health-bg">
 
             <div
-                class="enemy-health-fill"
-            ></div>
+                class="enemy-health-fill">
+            </div>
 
         </div>
 
@@ -330,7 +471,7 @@ function createEnemyHealthBar(enemy){
 
 
 // ===============================
-// UPDATE ENEMY HP BARS
+// UPDATE ENEMY HEALTH BARS
 // ===============================
 
 function updateEnemyHealthBars(){
@@ -415,7 +556,6 @@ function updateEnemyHealthBars(){
             percent + "%";
 
 
-        // Hide if behind camera
         enemy.healthBar.style.display =
             position.z > 1
                 ? "none"
@@ -427,7 +567,7 @@ function updateEnemyHealthBars(){
 
 
 // ===============================
-// REMOVE ENEMY HP BAR
+// REMOVE ENEMY HEALTH BAR
 // ===============================
 
 function removeEnemyHealthBar(enemy){
@@ -448,7 +588,7 @@ function removeEnemyHealthBar(enemy){
 
 
 // ===============================
-// GAME OVER
+// GAME OVER SCREEN
 // ===============================
 
 function showGameOver(){
@@ -471,7 +611,7 @@ function showGameOver(){
 
 
 // ===============================
-// RESTART
+// RESTART GAME
 // ===============================
 
 function restartGame(){
