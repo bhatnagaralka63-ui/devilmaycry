@@ -33,7 +33,7 @@ function init(){
     createWorld();
     createPlayer();
     createSword();
-
+    createEnemies();
     animate();
 
 }
