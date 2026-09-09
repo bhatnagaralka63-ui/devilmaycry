@@ -44,6 +44,7 @@ function animate(){
     let delta = clock.getDelta();
 
     updatePlayer(delta);
+    updateCombat(delta);
 
     renderer.render(scene,camera);
 
